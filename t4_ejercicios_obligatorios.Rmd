@@ -3,10 +3,10 @@ title: "Módulo 4. Ejercicios obligatorios"
 author: "Juan Manuel Cabrera Rodríguez"
 date: "2023-09-10"
 output:
-  html_document:
-    df_print: paged
   pdf_document:
     latex_engine: xelatex
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
