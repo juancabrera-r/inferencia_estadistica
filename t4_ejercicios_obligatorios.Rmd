@@ -1,0 +1,685 @@
+---
+title: "Módulo 4. Ejercicios obligatorios"
+author: "Juan Manuel Cabrera Rodríguez"
+date: "2023-09-10"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **Ejercicio 1**
+
+¿Reducir los servicios o aumentar los impuestos? En estos días, ya sea a nivel local, estatal o nacional, el gobierno a menudo enfrenta el problema de no tener suficiente dinero para pagar los diversos servicios que brinda. Una forma de abordar este problema es aumentar los impuestos. Otra forma es reducir los servicios. ¿Cual preferirías? Cuando la Encuesta de Florida preguntó recientemente a una muestra aleatoria de 1200 floridanos, el 52% (624 de los 1200) dijo que aumentaría los impuestos y el 48% dijo que reduciría los servicios. Determina si quienes están a favor de aumentar los impuestos en lugar de reducir los servicios son mayoría o minoría de la población.
+
+**Análisis de datos exploratorio (EDA):**
+
+En primer lugar se realiza el análisis de datos exploratorios.
+
+1. Datos: los datos son aumentar los impuestos o reducir los servicios, son datos nominales.
+
+2. Objetivos: comparar la proporción de la población que quiere aumentar los impuestos con la que quiere reducir los servicios. Al ser un datos nominal podemos tratarla como proporción.
+
+3. Muestras: hay una sola muestra de 1200 floridanos para una variable nominal. Se opta por una prueba de proporción.
+
+**Pregunta de investigación:**
+
+- ¿la proporción de floridanos a favor de subir los impuestos es igual que la proporción de floridianos de reducir los servicios?
+
+A continuación se definen las variables del enunciado:
+
+```{r}
+#Población
+n = 1200
+
+#Proporción aumentar los impuestos
+p1 = 0.52
+
+#Numero de floridanos a favor de subir los impuestos
+x1 = 624
+
+#proporción reducir los servicios (o de no aumentar los impuestos)
+p2 = 0.48
+
+#Numero de floridanos a favor de reducir los servicios
+x2 = n-624
+```
+
+Resolución aplicando direcatamente la función **prop.test**.
+
+Aplicamos la prueba de proporción.
+
+```{r}
+prop.test(x = x1,
+          n = n,
+          conf.level = 0.95)
+```
+
+El p-valor es 0.1749, superior al 5% de significación, por lo que **no aceptamos la hipótesis nula de igualdad**. Uno de las dos proporciones será mayor que la otra.
+
+**Graficamos**
+
+En primar lugar se crea un dataframe con los datos para luego poder poder graficar los datos con un gráfico tipo pie".
+
+```{r}
+
+#Se genera el dataframe y se cambia el nombre de la columna
+poblacion <- data.frame(c(rep(1,624), rep(0,576)))
+colnames(poblacion) <-  "eleccion"
+
+```
+
+Se crea el gráfico.
+
+```{r}
+library(ggstatsplot)
+ggpiestats(data = poblacion,
+           x = eleccion,
+           title = "Aumentar impuestos vs reducir servicios",
+           legend.title = "Aumentar impuestos",
+           bf.message = F)
+```
+
+**Conclusión**
+
+El 52% de la población prefiere que aumenten los impuestos, mientras que el 48% de la población prefiere que se reduzcan los servicios o lo que es lo mismo, no aumenten los impuestos.
+
+**Resolución usando la tabla CrossTable**
+
+También se podría resorvel el ejercicio usando la función CrossTable.
+
+```{r}
+library(gmodels)
+CrossTable(poblacion$eleccion)
+```
+Mediante la representación en tabla tenemos el mismo resultado dondel el 52% está a favor de aumentar los impuestos y el 48% en reducir los servicios.
+
+
+# **Ejercicio 2**
+
+Se quiere evaluar un estudio de gemelos del mismo sexo donde un gemelo había tenido una condena penal. Se recopiló la siguiente información: si el hermano también había tenido una condena penal y si los gemelos eran gemelos monocigóticos (idénticos) o dicigóticos (no idénticos). Los estudios de gemelos como este se han utilizado a menudo para investigar los efectos de la “naturaleza versus crianza”. Queremos contrastar si la proporción de condenados es mayor para los gemelos monocigóticos que para los dicigóticos.
+
+La tabla de datos observados es la siguiente:
+
+Gemelo        |   Condenado   |   No condenado
+--------------|---------------|----------------
+Dicigótico    |        2      |       15
+Monocigotico  |       10      |        3
+
+
+**EDA:**
+
+1. Datos: para cada gemelo (monocigótico o dicigótico) se obtiene si este ha sido condenado o no.
+
+2. Objetivo: comparar la proporción de gemelos condenados monocigótico y dicigótico.
+
+3. Muestra: se quiere comparar 2 muestras independientes de dos variables nominales (proporción). Prueba de Fisher o Chi-cuadrado.
+
+
+**Pregunta de hipótesis:**
+
+- ¿La proporción de gemelos monocigóticos condenados esta relacionada con a proporción de gemelos dicigóticos condenados?
+
+
+En primer lugar creamos la tabla de contingencia denominada _gemelos_.
+
+```{r}
+gemelos <- matrix(c(2,10,15,3),
+                  nrow = 2,
+                  dimnames = list(c("dicigotico", "monocigotico"),
+                                  c("condenado", "no.condenado")))
+gemelos
+```
+
+Comprobamos si debemos usar la **prueba de Fisher o Chi-squared**
+
+```{r}
+chisq.test(gemelos)$expected
+```
+
+Como _NO_ hay valores inferior a 5, optamos por la **prueba de Chi-squared**.
+
+```{r}
+chisq.test(gemelos, correct = F)
+```
+
+El valor **p-value** es menor al nivel del significación del 5%, por ello **rechazamos la hipótesis nula de igualdad de proporciones**, y por lo tanto, *no existe una relación significante entre los gemelos monocigóticos condenados y los gemelos dicigóticos condenados.*
+
+También se podría resolver a través de la función CrossTable del paquete _gmodels_.
+
+```{r}
+library(gmodels)
+
+CrossTable(gemelos,
+           prop.r = F,
+           prop.t = F,
+           prop.chisq = F,
+           chisq = T)
+```
+
+Como era de esperar se obtiene el mismo resultado.
+
+**Pregunta de hipótesis:**
+
+- ¿La proporción de gemelos monocigóticos condenados es mayor que la proporción de gemelos dicigóticos condenados?
+
+(PENDIENTE)
+
+
+# **Ejercicio 3**
+
+Vamos a evaluar si existe una relación entre el nivel educativo y el número abortos inducidos. La base de datos infert corresponde a un estudio de caso-control donde la variable "Education" está formada por 3 categorías (0 = 0-5 años, 1 = 6-11 años, 2 = 12+ años); y la variable "number of prior induced abortions" también (0 = 0, 1 = 1, 2 = 2 o más abo  inducidos).
+
+Se muestra la base de datos:
+
+```{r}
+library(datasets)
+data <- infert
+
+head(data)
+```
+ 
+**EDA:**
+
+1. Datos: los datos son education e induced, ambas son variables nominales.
+
+2. Objetivo: comparar si existe relación entre el nivel de educación y el número de abortos.
+
+3. Muestra: existe una muestra de 248 personas, con dos variables nominales, el nivel educativo y el número de abortos. Debemos usar la prueba Fisher o Chi cuadrado.
+
+Para facilitar trabajar con estos datos, se modifica los niveles de la variable education, la cual es de tipo factor.
+
+```{r}
+levels(infert$education) <- c("bajo", "medio", "alto")
+
+head(infert)
+```
+
+Vamos a mostrar los datos en un gráfico de barras.
+
+```{r}
+library(ggstatsplot)
+ggbarstats(infert,
+           education,
+           induced,
+           bf.message = F)
+```
+
+Se realiza la **prueba de independencia Chi-cuadrado**, donde vamos a usar unicamente 2 categorías de la variable _Induced_.
+
+```{r}
+library(rstatix)
+
+tab <- table(infert$education, infert$induced)
+
+pairwise_prop_test(tab[ , c(1,3)],
+                   p.adjust.method ="bonferroni")
+```
+
+Con la función _pairwise_prop_test_ se va a evaluar la homogeneidad entre grupos.
+
+Se observa que existe una diferencia significativa entre:
+
+- el grupo de población con un nivel de educación bajo y un nivel de educación medio.
+
+También se podría usar la función _fisher.multcomp_ del paquete _RVAideMemoire_ para comparar 2 grupos de 3 categorías cada grupo.
+
+```{r}
+library(RVAideMemoire)
+fisher.multcomp(tab, p.method = "bonferroni")
+```
+
+Aplicando la función de comparación de Fisher.
+
+Unicamente se observa una diferencia significativa entre el grupo de nivel de educación bajo y medio para el grupo 0 y 2 abortos.
+
+Se podría resumir que no existe una relación significativa entre el nivel de educación y el número de abortos.
+
+Para faciliar la comprensión del ejercicio, a continuación vamos a estudiar la relación entre el nivel de educación y si ha habido aborto o no.
+
+Comenzamos modificando transformando la variable _Induced_ a factor y le asignamos 2 niveles ("no" para cuando no ha habido aborto y "si" para cuando ha habido aborto.
+
+```{r}
+infert.long <- infert
+
+infert.long$induced <- as.factor(infert.long$induced)
+
+levels(infert.long$induced) <- c("no", "si", "si")
+
+head(infert.long)
+```
+
+Mostramos el gráfico de barras.
+
+```{r}
+ggbarstats(infert.long,
+           education,
+           induced,
+           bf.message = F)
+```
+
+Aplicamos la función que compara entre proporciones.
+
+```{r}
+pairwise_prop_test(table(infert.long$education, infert.long$induced), p.adjust.method ="bonferroni")
+```
+
+Se observa que no existe una relación significativa entre el nivel de educación y si ha habido o no al menos un aborto inducido.
+
+
+# **Ejercicio 4**
+
+Utiliza los datos “Arthritis”, del paquete “vcd”, sobre un ensayo clínico de doble ciego que investiga un nuevo tratamiento para la artritis reumatoide.Tenemos información de 84 observaciones de 5 variables: la identificación del paciente (ID), el tratamiento (Treatment: Placebo, Treated), el sexo (Sex: Female, Male), la edad (Age) y la mejoría (Improved: None, Some, Marked). Para el grupo tratamiento, queremos comparar las edades de los pacientes que no mostraron mejoría con los que sí tuvieron una marcada mejoría. 
+
+```{r}
+library(vcd)
+artritis <- Arthritis
+
+head(artritis)
+```
+
+**EDA:**
+
+1. Datos: la edad de los pacientes (Age) y la mejoría (Improved). La variable edad es numérica y la de mejoria es nominal.
+
+2. Objetivo: para el grupo que recibió tratamiento se quiere comparar las edades que no mostraron mejoría con los que sí tuvieron uan mejoria.
+
+3. Muestra: existe una sola muestra, con dos variables independientes, una variable numérica y otra nominal. Se podrá usará la prueba la prueba t-Student, Yuen o Mann-Whitney.
+
+En primer lugar filtramos los pacientes que se sometieron al tratamiento y solo aquellos que obtuvieron una mejoría marcada (Marked) o ninguna mejoría (none).
+
+```{r}
+library(dplyr)
+artritis.long <- artritis %>%
+  filter(Treatment == "Treated" & (Improved == "None" | Improved == "Marked"))
+
+head(artritis.long)
+```
+
+Aplicando la siguiente función podemos determinar la edad media para cada categoría (none y marked).
+
+```{r}
+artritis.long %>%
+  group_by(Improved) %>%
+  get_summary_stats(Age, type = "mean_sd")
+```
+
+Se observa que la edad media para el grupo Marked es 56.81 años, mientras que para el grupo None es de 49.85 años.
+
+Podemos observar estos resultados en un gráfico de cajas.
+
+```{r}
+library(ggpubr)
+ggboxplot(x="Improved",
+          y="Age",
+          data = artritis.long,
+          add=c("mean"),
+          add.params=list(color='red'))
+```
+
+Se objerva valores atípicos en el grupo Marked. Por ello descrtamos la prueba t-Student y vamos a usar la prueba robusta de Yuen.
+
+Aplicamos la función _identify_outliers_ para determinar la cantidad de valores típicos y extremos.
+
+```{r}
+artritis.long %>%
+  group_by(Improved) %>%
+  identify_outliers(Age)
+```
+
+Tenemos 2 valores atípicos y 1 valor extremo.
+
+A continuación volvemos a determinar la edad media de cada categoría pero recortando un 20% los datos.
+
+```{r}
+artritis.long %>%
+  group_by(Improved) %>%
+  filter(between(Age,
+                 quantile(Age, 0.1),
+                 quantile(Age, 0.9))) %>%
+  get_summary_stats(Age, type="mean_sd")
+```
+
+Se observa que la edad media para el grupo Marked es 57.765 años (antes 56.81 años), mientras que para el grupo None es de 50.889 años (antes 49.85 años).
+
+Volvemos a obervar el número de valores atípicos/extremos para los datos recortados.
+
+```{r}
+artritis.long %>%
+  group_by(Improved) %>%
+  filter(between(Age,
+                 quantile(Age, 0.1),
+                 quantile(Age, 0.9))) %>%
+  identify_outliers(Age)
+```
+
+Recortando el 20% eliminamos los valores extremos pero seguimos teniendo valores atípicos, en este caso 3 valores (1 nuevo).
+
+A continuación vamos a aplicar la prueba de Shapiro-Wilks para comprobar si existe normalidad en la distribución de los datos.
+
+```{r}
+artritis.long %>%
+  group_by(Improved) %>%
+  shapiro_test(Age)
+```
+
+La prueba de Shapiro-Wilks, para la variable Marked da como resultado un p-valor < 0.05, no aceptamos la hipótesis nula de normalidad.
+
+Con la función Q-Q plots
+
+```{r}
+ggqqplot(artritis.long,
+         x="Age",
+         facet.by = "Improved")
+```
+
+En el gráfico se comprueba que los datos de la variable Marked no siguien una distribución normal por lo que descartamos la prueba paramétrica de Yuen.
+
+Vamos a usar una **prueba no paramétrica de Mann-Whitney** ya que los datos no cumplen con el supuesto de normalidad.
+
+```{r}
+library(rstatix)
+#wilcox_test(data = artritis.long,
+#            formula = Age ~ Improved)
+```
+
+Al aplicar la prueba wilcox_test se obtiene el siguiente error:
+
+"Error in wilcox.test.default(x = c(29L, 30L, 59L, 63L, 63L, 64L, 69L, :
+not enough 'y' observations"
+
+Como no he podido solventarlo, continuo el ejercicio.
+
+Aplico la función ggbetweenstats de tipo 'np' no parametrico.
+
+```{r}
+library(ggstatsplot)
+
+ggbetweenstats(x = Improved,
+               y = Age,
+               data = artritis.long,
+               type = 'np',
+               bf.message = F) +
+  theme(text = element_text(size=8),
+        plot.subtitle = element_text(size=8))
+  
+```
+
+Se observa que el tratamiento funciona princpialmente con una edad media de 58 años.
+
+
+# **Ejercicio 5**
+
+Utiliza los datos “immer”, del paquete “MASS”, sobre el rendimiento de la cebada en los años 1931 y 1932 en un mismo campo de recolección.Comprueba mediante pruebas paramétricas, no paramétricas y robustas si han cambiado los valores medios de la producción de cebada. Interpreta y compara los resultados.
+
+Se cargan los datos.
+
+```{r}
+library(MASS)
+
+cebada <- immer
+
+head(cebada)
+```
+
+Las variables de los datos son:
+
+- **Loc**: localización
+
+- **Var**: Variedad de cebada
+
+- **Y1**: cocecha de 1931
+
+- **Y2**: cocecha de 1932
+
+**ADE**
+
+- Datos: tenemos dos variables Y1 e Y1 que corresponde al rendimiendo en la recolección de cebada. Ambas variables son numéricas.
+
+- objetivo: comprobar la media de la producción de cebada.
+
+- muestra: comparar 2 muestras independiente para una variable numérica.
+
+**Prueba paramétrica**
+
+Para realizar la prueba paramétrica usaremos la **t de Student**.
+
+En primer lugar vamos a modificar los datos
+
+```{r}
+library(tidyverse)
+library(dplyr)
+
+cebada.long <- cebada %>%
+  pivot_longer(c(Y1, Y2),
+               names_to = "year",
+               values_to = "score") %>%
+  arrange(year)
+
+head(cebada.long)
+```
+
+Obtenemos la media.
+
+```{r}
+cebada.long %>%
+  group_by(year) %>%
+  get_summary_stats(score, type = "mean")
+
+```
+
+La media de producción para Y1 es de 109.05, mientras que la media par Y2 es de 93.13. En un comienzo se observa que en el año Y1 (1931) la producción fue mayor.
+
+```{r}
+ggboxplot(x="year",
+          y="score",
+          data = cebada.long,
+          add=c("mean"),
+          add.params=list(color='red'))
+```
+
+En el gráfico box se observa que existe un valor atípico para Y1.
+
+Vamos a comprobar si este valor atípico es significativo.
+
+```{r}
+cebada.long %>%
+  group_by(year) %>%
+  identify_outliers(score)
+```
+
+Tal como se muestra en el gráfico tipo box, se comprueba que existe un valor atípico pero no extremo.
+
+Comprobamos si cumple con la normalidad.
+
+```{r}
+cebada.long %>%
+  group_by(year) %>%
+  shapiro_test(score)
+```
+
+Como p-value es < 0.05 para Y1, no aceptamos H0 de normalidad, lo que indica que esta variable no siguen una distribución normal.
+
+```{r}
+ggqqplot(cebada.long,
+         x="score",
+         facet.by = "year")
+```
+
+En el gráfico se observa que los datos se aproximan a la normalidad.
+
+```{r}
+library(rstatix)
+t_test(score ~ year,
+       data = cebada.long,
+       paired = F,
+       alternative = "two.sided",
+       mu = 0,
+       conf.level = 0.95)
+```
+
+La **prueba t_test** describe la diferencia entre dos medias. 
+
+Como p-value es menor al 5% de confianza, rechazamos H0 de igualdad, el valor medio es distintos entre los años Y1 e Y2.
+
+Tamaño del efecto
+
+```{r}
+cohens_d(score ~ year,
+         data = cebada.long)
+```
+
+El tamaño del efecto es moderado, es decir, hay una diferencia significativa entre la producción media de cada año.
+
+
+```{r}
+library(ggstatsplot)
+ggbetweenstats(x = year,
+               y = score,
+               data = cebada.long,
+               bf.message = F)
+```
+
+En el caso de Y1 se observa una distribución bimodal, con una media en la producción de 109.05, mientra que en el caso de Y2 se observa que los datos siguen una distribución normal con una media en la producción de 93.13.
+
+La prueba t de Welch para las dos muestras, señala que la diferencia es estadísticamente significativa (t(56.46) = p < 0.02, d = 0.59)
+
+**Prueba robusta**
+
+Repetimos el ejercicio pero usando una prueba robusta. Para ello se recortan el 20% de los datos (10% por cada lado)
+
+```{r}
+cebada.long %>%
+  group_by(year) %>%
+  filter(between (score,
+                  quantile(score, 0.1),
+                  quantile(score, 0.9))) %>%
+  get_summary_stats(score, type = "mean")
+```
+
+La media de producción para Y1 es de 106.63, mientras que la media par Y2 es de 91.8.
+
+```{r}
+cebada.long %>%
+  group_by(year) %>%
+  filter(between(score,
+                 quantile(score,0.1),
+                 quantile(score,0.9))) %>%
+  ggboxplot(x="year",
+            y="score",
+            add=c("mean"),
+            add.params=list(color='red'))
+```
+
+Al recortar el 20% de los datos nos desprendemos del valor atípico.
+
+
+```{r}
+cebada.long %>%
+  group_by(year) %>%
+  filter(between(score,
+                 quantile(score,0.1),
+                 quantile(score,0.9))) %>%
+   shapiro_test(score)
+```
+
+Ahora como p > 0.05, no podemos rechazar la hipótesis nula de normalidad.
+
+```{r}
+cebada.long %>%
+  group_by(year) %>%
+  filter(between(score,
+                 quantile(score,0.1),
+                 quantile(score,0.9))) %>%
+   ggqqplot(x="score",
+           facet.by = "year")
+```
+
+```{r}
+library(DescTools)
+YuenTTest(score ~ year,
+          data = cebada.long)
+```
+
+El p-valor es > 0.05, por lo que no podemos rechazar H0 de igualdad.
+
+```{r}
+library(WRS2)
+yuen.effect.ci(score ~ year,
+               data = cebada.long,
+               tr = 0.2,    
+               alpha = 0.05,    
+               nboot = 10)
+```
+
+El tamaño del efecto es 0.35, existe una diferencia moderada en las medias de las producciones.
+
+```{r}
+library(ggstatsplot)
+ggbetweenstats(x = year,
+               y = score,
+               data = cebada.long,
+               type = "robust",
+               bf.message = F)
+```
+
+En el caso de Y1 se observa una distribución bimodal, con una media en la producción de 105.13, mientra que en el caso de Y2 se observa que los datos siguen una distribución normal con una media en la producción de 91.39.
+
+La prueba t de Yen para las dos muestras, señala que la diferencia no es estadísticamente significativa (t(33.4) = p = 0.10, $ \delta = 0.59$)
+
+**Prueba no paramétrica**
+
+La prueba no paramétrica para dos variables independientes es la **prueba U de Mann-Whitney**.
+
+```{r}
+library(ggpubr)
+gghistogram(cebada.long,
+            x = "score",
+            add = "median",
+            rug = T,
+            bins = 30,
+            color = "year",
+            fill = "year",
+            palette = "Dark2")
+```
+
+En el histograma se observa el valor atípico.
+
+```{r}
+library(rstatix)
+wilcox_test(score ~ year,
+            data = cebada.long)
+```
+
+El p-valor es inferior a 0.05, por lo que rechazamos la hipótesis nula de igualdad, es decir, no podemos aceptar la hipótesis de que la media entre la producción en ambos años es la misma.
+
+```{r}
+wilcox_effsize(score ~ year,
+               data = cebada.long)
+```
+
+El tamaño del efecto es de 0.265.
+
+La diferencia entre las medias de Y1 e Y2 es de magnitud pequeña.
+
+```{r}
+library(ggstatsplot)
+ggbetweenstats(x = year,
+               y = score,
+               data = cebada.long,
+               type = "np",
+               bf.message = F)
+```
+
+La media de producción para el año Y1 es de 102.95 mientras que para el año Y2 es de 92.95.
+
+La prueba de Wilcoxon monstró que la diferencia fue significativa (W = 589, p = 0.0406, r = 0.31)
+
+**Concluciones**
+
+Dado que los datos tiene valores atípicos y la distribución de los datos recortados siguen una distribución normal, podemos optar por la prueba robusta de Yuen como prueba definitiva.
